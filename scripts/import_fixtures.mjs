@@ -59,7 +59,7 @@ const stageFromText = s => { s = s.toLowerCase();
   if (s.includes('round of 16')) return 'r16';
   if (s.includes('quarter')) return 'qf';
   if (s.includes('semi')) return 'sf';
-  if (s.includes('third') || s.includes('3rd')) return 'third';
+  if (s.includes('third') || s.includes('3rd') || s.includes('bronze')) return 'third';
   if (s.includes('final')) return 'final';
   return null;
 };
@@ -100,10 +100,11 @@ for (const ev of events) {
   const noM = summary.match(/match\s*#?\s*(\d{1,3})/i);
   const matchNo = noM ? +noM[1] : null;
 
-  // split "Team A vs Team B" (prefer vs/v; fall back to a dash), after any "Group X:" / "Match N:" prefix
-  const body = summary.replace(/^.*?:\s*/, '');
-  let parts = body.split(/\s+(?:vs?\.?|v)\s+/i);
-  if (parts.length < 2) parts = body.split(/\s+[-–]\s+/);
+  // SUMMARY looks like "Home vs Away - FIFA World Cup 2026 <round>".
+  // Teams are the part before the first " - "; the descriptor after it is kept (in `summary`)
+  // only for detecting knockout rounds further down.
+  const teamsPart = summary.split(/\s+[–-]\s+/)[0];
+  const parts = teamsPart.split(/\s+(?:vs?\.?|v)\s+/i);
   const home = norm(parts[0]);
   const away = norm((parts[1] || '').replace(/\s*\(.*$/, ''));
 
