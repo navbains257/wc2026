@@ -5,9 +5,18 @@ from match results, so you only ever enter scores — wins, draws, clean sheets,
 progression and the underdog bonus all compute automatically.
 
 ```
-index.html      read-only public leaderboard + squads
-db.js           Supabase client + scoring engine (the only place points are defined)
-schema.sql      tables, RLS, 48-team seed, 72 group fixtures, draw function
+index.html                              read-only public leaderboard + squads (served by Pages)
+db.js                                   Supabase client + scoring engine (the only place points are defined)
+supabase/migrations/                    SQL, in run order:
+  20260101000000_schema.sql               tables, RLS, 48-team seed, 72 group fixtures, draw function
+  20260101000001_fixtures.sql             knockout "slots" + match metadata
+  20260101000002_v2.sql                   pot/settings, snapshots, audit log, realtime
+supabase/functions/sync/index.ts        Edge Function: pull results from football-data.org
+supabase/config.toml                    Supabase CLI config for the function
+scripts/import_fixtures.mjs             one-off ICS kickoff/venue importer
+tests/                                   scoring tests — `npm test`
+.github/workflows/deploy.yml            deploy index.html + db.js to GitHub Pages on push to main
+.env.example                            documents the env vars the importer + function need
 ```
 
 ## 1. Supabase
@@ -52,12 +61,13 @@ Run `migration_fixtures.sql` in Supabase (adds `match_no`, `slot_home`, `slot_aw
 lets knockout rows exist before teams are known). Then load every kickoff from the official
 calendar rather than typing them by hand:
 1. Download the 2026 World Cup schedule as an `.ics` file (FIFA.com / any full-tournament calendar).
-2. `npm i @supabase/supabase-js`
-3. Run the importer with your **service-role** key (local only — never commit it):
+2. `npm install`
+3. Run the importer with your **service-role** key (local only — never commit it; copy
+   `.env.example` to `.env` to keep it out of git):
    ```bash
    SUPABASE_URL="https://YOUR-PROJECT.supabase.co" \
    SUPABASE_SERVICE_KEY="eyJ...service-role..." \
-   node import_fixtures.mjs worldcup2026.ics
+   node scripts/import_fixtures.mjs worldcup2026.ics
    ```
 Group games get their kickoff + venue set (matched by team names); knockout games are inserted as
 dated "Winner Group A" slots that show in **Next up** and **Bracket** until you fill in the real
@@ -68,7 +78,7 @@ Stops you typing scores in by hand. Uses **football-data.org** (free tier, cover
 1. Run `migration_v2.sql` in Supabase (adds pot/settings, a paid flag, standings snapshots, an audit
    log, and turns on realtime).
 2. Get a free API token at football-data.org.
-3. Deploy the function (it's `sync_function.ts` — place it at `supabase/functions/sync/index.ts`):
+3. Deploy the function (already at `supabase/functions/sync/index.ts`, configured in `supabase/config.toml`):
    ```bash
    supabase functions deploy sync --no-verify-jwt
    supabase secrets set FOOTBALL_DATA_TOKEN=your_token
@@ -98,14 +108,24 @@ tap a name for the team-by-team breakdown) · **Team ranking** · **Next up** ·
 standings) · **Rules**. Flags show throughout via flagcdn, so they render on Windows too.
 
 ## 5. GitHub Pages
+Set the anon URL/key in `db.js`, then push to `main`:
 ```bash
-git init && git add . && git commit -m "WC26 sweepstake"
-git branch -M main
-git remote add origin https://github.com/<you>/wc26-sweepstake.git
+git add . && git commit -m "WC26 sweepstake"
 git push -u origin main
 ```
-Repo **Settings → Pages → Source: main / root**. Live at
-`https://<you>.github.io/wc26-sweepstake/` in a minute or two.
+Repo **Settings → Pages → Source: GitHub Actions**. Every push to `main` runs
+`.github/workflows/deploy.yml`, which uploads only `index.html` + `db.js` and publishes them.
+Live at `https://<you>.github.io/<repo>/` in a minute or two.
+
+## Tests
+```bash
+npm install
+npm test
+```
+`tests/` imports `db.js` and asserts the scoring (stage ladder, knockout/shootout rules, underdog
+bonus, champion-via-pens, Feed-sums-to-total, goals tiebreaker, best-thirds, movers, pot maths).
+A small ESM loader (`tests/loader.mjs`) maps `db.js`'s browser-native Supabase import to the
+installed package so the same file runs unchanged in Node and in the browser.
 
 ## Scoring (defined once in `db.js`)
 - **3** win · **1** draw (group games only) · **+2** per clean sheet · **+3** per win for the 12 underdog teams.

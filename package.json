@@ -1,0 +1,13 @@
+{
+  "name": "wc2026-sweepstake",
+  "version": "1.0.0",
+  "description": "World Cup 2026 sweepstake — static GitHub Pages site backed by Supabase, with a results-derived scoring engine.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --import ./tests/loader-register.mjs --test \"tests/**/*.test.mjs\""
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}
