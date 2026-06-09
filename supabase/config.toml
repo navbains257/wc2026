@@ -1,0 +1,12 @@
+# =====================================================================
+#  Supabase CLI configuration.
+#  Docs: https://supabase.com/docs/guides/cli/config
+# =====================================================================
+project_id = "wc2026-sweepstake"
+
+[functions.sync]
+# Pulls results from football-data.org into `matches` and snapshots standings.
+# Deployed with --no-verify-jwt (it is invoked by pg_cron, not an end user),
+# so disable JWT verification here too.
+verify_jwt = false
+entrypoint = "./functions/sync/index.ts"
