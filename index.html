@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup 2026 Sweepstake</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#080b0a;--panel:#111614;--panel-2:#0d1110;--line:#23302b;--ink:#f2f4ef;--muted:#8a978f;
+        --pitch:#b9ff4b;--gold:#ffc23d;--dog:#ff6a45;--r32:#52c7ff;--shadow:0 18px 50px rgba(0,0,0,.55)}
+  *{box-sizing:border-box}body{margin:0;background:
+      radial-gradient(1200px 600px at 80% -10%,rgba(185,255,75,.07),transparent 60%),
+      radial-gradient(900px 500px at -10% 10%,rgba(82,199,255,.06),transparent 55%),var(--bg);
+    color:var(--ink);font-family:'Sora',system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding:28px 16px 80px}
+  .wrap{max-width:1100px;margin:0 auto}
+  .kicker{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--pitch);font-weight:700;margin-bottom:8px}
+  h1{font-family:'Anton';font-weight:400;line-height:.92;margin:0 0 6px;font-size:clamp(34px,7vw,68px);text-transform:uppercase;
+     background:linear-gradient(180deg,#fff 30%,#cfd8cf);-webkit-background-clip:text;background-clip:text;color:transparent}
+  h1 .y{color:var(--pitch);-webkit-text-fill-color:var(--pitch)}
+  .tabs{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;margin:22px 0 4px;border-bottom:1px solid var(--line);-webkit-overflow-scrolling:touch}
+  .tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:'Sora';font-weight:700;
+       font-size:13px;letter-spacing:.03em;padding:11px 13px;cursor:pointer;text-transform:uppercase;white-space:nowrap}
+  .tab.on{color:var(--ink);border-bottom-color:var(--pitch)}.tab:hover{color:var(--ink)}
+  .pane{display:none;animation:fade .25s ease}.pane.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .card{border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--panel),var(--panel-2));
+        box-shadow:var(--shadow);padding:22px;margin-top:18px}
+  .card-title{font-family:'Anton';font-weight:400;letter-spacing:.16em;text-transform:uppercase;font-size:14px;color:var(--muted);
+        margin:0 0 16px;display:flex;align-items:center;gap:10px}
+  .card-title .dot{width:8px;height:8px;border-radius:50%;background:var(--pitch);box-shadow:0 0 12px var(--pitch)}
+
+  /* sweepstake league + expand */
+  .lb{display:flex;flex-direction:column;gap:9px}
+  .lb-row{display:grid;grid-template-columns:42px 1fr auto 22px;align-items:center;gap:14px;background:#0b0f0e;border:1px solid var(--line);border-radius:13px;padding:13px 16px;cursor:pointer}
+  .lb-row.lead{border-color:var(--gold);background:linear-gradient(90deg,rgba(255,194,61,.10),#0b0f0e 55%)}
+  .rk{font-family:'Anton';font-size:22px;color:var(--muted);text-align:center}.lb-row.lead .rk{color:var(--gold)}
+  .lb-name{font-weight:700;font-size:17px}.lb-teams{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .lb-pts{font-family:'Anton';font-size:32px;line-height:1;color:var(--pitch);text-align:right}.lb-row.lead .lb-pts{color:var(--gold)}
+  .lb-pts small{display:block;font-family:'Sora';font-size:10px;font-weight:600;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;margin-top:3px}
+  .chev{color:var(--muted);transition:transform .2s;text-align:center;font-size:13px}.lb-row.open .chev{transform:rotate(90deg)}
+  .detail{display:none;margin:2px 0 6px;padding:4px 2px 8px}.detail.open{display:block}
+  .bd{background:#0b0f0e;border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:11px}
+  .bd.dog{border-color:#3a2118}.bd.champ{border-color:var(--gold)}
+  .grp{width:27px;height:27px;border-radius:8px;display:grid;place-items:center;font-family:'Anton';font-size:13px;background:#16201c;color:var(--pitch);flex:none}
+  .bd-main{flex:1;min-width:0}
+  .bd-name{font-weight:700;font-size:14px}.bd-name .dogtag{font-size:8.5px;font-weight:700;letter-spacing:.1em;color:var(--dog);border:1px solid #3a2118;border-radius:5px;padding:1px 4px;margin-left:5px;text-transform:uppercase}
+  .bd-bits{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+  .bd-pts{font-family:'Anton';font-size:22px;color:var(--pitch);flex:none}.bd.dog .bd-pts{color:var(--dog)}.bd.champ .bd-pts{color:var(--gold)}
+
+  /* teams ranking */
+  .tr{display:grid;grid-template-columns:38px 27px 1fr auto;align-items:center;gap:11px;background:#0b0f0e;border:1px solid var(--line);border-radius:11px;padding:10px 13px;margin-bottom:7px}
+  .tr.dog{border-color:#3a2118}.tr.champ{border-color:var(--gold)}
+  .tr .trk{font-family:'Anton';font-size:18px;color:var(--muted);text-align:center}
+  .tr-name{font-weight:700;font-size:14.5px}.tr-sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .tr-own{color:var(--pitch)}.tr-own.none{color:var(--muted)}
+  .tr-pts{font-family:'Anton';font-size:22px;color:var(--pitch)}.tr.dog .tr-pts{color:var(--dog)}.tr.champ .tr-pts{color:var(--gold)}
+
+  /* fixtures */
+  .day{font-family:'Anton';font-size:13px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin:18px 4px 8px}
+  .fix{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;background:#0b0f0e;border:1px solid var(--line);border-radius:12px;padding:11px 16px;margin-bottom:8px}
+  .fx-team{display:flex;align-items:center;gap:9px;min-width:0}.fx-team.away{justify-content:flex-end;text-align:right}
+  .fx-name{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .owner{font-size:11px;color:var(--pitch);margin-top:1px}.owner.none{color:var(--muted)}
+  .fx-mid{text-align:center;min-width:92px}
+  .fx-time{font-size:11px;color:var(--muted)}
+  .fx-stage{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--r32);border:1px solid #1f3a4a;border-radius:5px;padding:1px 5px;margin-top:4px}
+
+  /* group tables */
+  .gwrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+  .gtab{background:#0b0f0e;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .gtab h4{font-family:'Anton';font-weight:400;letter-spacing:.1em;margin:0;padding:11px 14px;background:#101714;font-size:15px;border-bottom:1px solid var(--line)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:7px 5px;text-align:center}
+  th.l,td.l{text-align:left}td{padding:8px 5px;text-align:center;border-top:1px solid #18211d}
+  tr.q td{background:rgba(185,255,75,.06)}tr.q .pos{color:var(--pitch);font-weight:700}
+  .pos{color:var(--muted);font-weight:600}td.name{font-weight:600}.pts{font-family:'Anton';color:var(--pitch)}
+  .qnote{font-size:11px;color:var(--muted);margin-top:10px}
+
+  /* bracket */
+  .bracket{display:flex;gap:18px;overflow-x:auto;padding:6px 2px 16px}
+  .round{min-width:200px;flex:none}
+  .round h4{font-family:'Anton';font-weight:400;letter-spacing:.1em;font-size:13px;color:var(--muted);text-transform:uppercase;margin:0 0 10px;text-align:center}
+  .ko{background:#0b0f0e;border:1px solid var(--line);border-radius:11px;padding:9px 11px;margin-bottom:10px}
+  .ko .side{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 0}
+  .ko .side .t{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ko .side .s{font-family:'Anton';font-size:16px;color:var(--muted)}
+  .ko .side.win .t{color:var(--ink)}.ko .side.win .s{color:var(--pitch)}
+  .ko .side.lose .t,.ko .side.lose .s{color:var(--muted);opacity:.6}
+  .ko .pl{font-size:10px;color:var(--gold);text-align:center;margin-top:3px}
+  .ko.empty{border-style:dashed;color:var(--muted);font-size:12px;text-align:center;padding:14px 11px}
+  .final-card{border-color:var(--gold)}
+
+  /* feed */
+  .fitem{background:#0b0f0e;border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin-bottom:10px}
+  .fhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .fscore{font-family:'Anton';font-size:18px}.fscore .vs{color:var(--muted);font-size:13px;margin:0 8px}
+  .fscore .w{color:var(--pitch)}
+  .fstage{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 6px}
+  .fpens{font-size:10.5px;color:var(--gold)}
+  .faward{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px dashed var(--line)}
+  .faward .who{font-weight:700;font-size:13.5px}.faward .who .o{color:var(--pitch);font-weight:500;font-size:11.5px;margin-left:6px}
+  .faward .items{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .faward .ap{font-family:'Anton';font-size:18px;color:var(--pitch);flex:none}.faward .ap.zero{color:var(--muted)}
+
+  /* rules */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+  .chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#0b0f0e;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:500}
+  .chip b{font-family:'Anton';font-weight:400;font-size:15px}.chip .p{color:var(--pitch)}.chip.g .p{color:var(--gold)}.chip.d .p{color:var(--dog)}.chip.b .p{color:var(--r32)}
+  .rule-note{color:var(--muted);font-size:13.5px;line-height:1.7;margin-top:14px}.rule-note b{color:#cdd6cd;font-weight:600}
+
+  .flag{width:20px;height:15px;border-radius:2px;object-fit:cover;vertical-align:-2px;margin-right:7px;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+  .pinbar{font-size:13px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .pinbar select{background:#0a0e0d;border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:7px 10px;font-family:'Sora';font-size:13px;font-weight:600}
+  .lb-row.me{box-shadow:0 0 0 2px var(--pitch) inset}
+  .mv{font-size:12px;font-weight:700;margin-left:8px}.mv.up{color:var(--pitch)}.mv.down{color:var(--dog)}.mv.flat{color:var(--muted)}
+  .gf{color:var(--muted);font-weight:500}
+  /* pot */
+  .pot-top{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin-bottom:18px}
+  .pot-total{font-family:'Anton';font-size:54px;line-height:.9;color:var(--pitch)}
+  .pot-sub{color:var(--muted);font-size:13px}
+  .payout{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;background:#0b0f0e;border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin-bottom:8px}
+  .payout .lbl{font-weight:700}.payout .who{color:var(--pitch);font-size:13px}.payout .amt{font-family:'Anton';font-size:22px;color:var(--gold)}.payout .pc{color:var(--muted);font-size:12px}
+  .paidlist{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .paidtag{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+  .paidtag.yes{border-color:#2c4a1e;color:var(--pitch)}.paidtag.no{color:var(--muted)}
+  .state{color:var(--muted);text-align:center;padding:34px;font-size:14px}.err{color:var(--dog)}
+  footer{margin-top:32px;text-align:center;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">USA · Canada · Mexico · 11 Jun – 19 Jul 2026</div>
+  <h1>World&nbsp;Cup <span class="y">2026</span> Sweepstake</h1>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-pane="lb">Sweepstake</button>
+    <button class="tab" data-pane="teams">Team ranking</button>
+    <button class="tab" data-pane="next">Next up</button>
+    <button class="tab" data-pane="groups">Group tables</button>
+    <button class="tab" data-pane="ko">Bracket</button>
+    <button class="tab" data-pane="feed">Feed</button>
+    <button class="tab" data-pane="pot">Pot</button>
+    <button class="tab" data-pane="rules">Rules</button>
+  </nav>
+
+  <section class="pane on" id="pane-lb">
+    <div class="card"><h3 class="card-title"><span class="dot"></span> League table — tap a name for the breakdown</h3>
+      <div class="pinbar">I am <select id="pinSel"><option value="">— pick yourself —</option></select></div>
+      <div class="lb" id="lb"><div class="state">Loading…</div></div></div>
+  </section>
+  <section class="pane" id="pane-teams">
+    <div class="card"><h3 class="card-title"><span class="dot"></span> All 48 teams by points</h3><div id="teams"></div></div>
+  </section>
+  <section class="pane" id="pane-next">
+    <div class="card"><h3 class="card-title"><span class="dot"></span> Upcoming fixtures</h3><div id="next"></div></div>
+  </section>
+  <section class="pane" id="pane-groups">
+    <div class="card"><h3 class="card-title"><span class="dot"></span> World Cup group tables</h3>
+      <div class="gwrap" id="groups"></div>
+      <p class="qnote">Green = top two (auto-qualify). Sorted by points → goal difference → goals for.</p></div>
+    <div class="card"><h3 class="card-title"><span class="dot"></span> Race for the last 8 spots — best third-placed teams</h3>
+      <div id="thirds"></div>
+      <p class="qnote">The 8 best third-placed teams across all groups also reach the Round of 32. Green = currently qualifying.</p></div>
+  </section>
+  <section class="pane" id="pane-ko">
+    <div class="card"><h3 class="card-title"><span class="dot"></span> Knockout bracket</h3><div class="bracket" id="ko"></div></div>
+  </section>
+  <section class="pane" id="pane-feed">
+    <div class="card"><h3 class="card-title"><span class="dot"></span> Results feed — who earned what</h3><div id="feed"></div></div>
+  </section>
+  <section class="pane" id="pane-pot">
+    <div class="card"><h3 class="card-title"><span class="dot"></span> Prize pot</h3><div id="pot"></div></div>
+  </section>
+  <section class="pane" id="pane-rules">
+    <div class="card"><h3 class="card-title"><span class="dot"></span> Scoring</h3>
+      <div class="chips">
+        <span class="chip"><b class="p">3</b> Win</span><span class="chip"><b class="p">1</b> Draw (group only)</span>
+        <span class="chip g"><b class="p">+2</b> Clean sheet</span><span class="chip d"><b class="p">+3</b> Underdog / win</span>
+      </div>
+      <div class="chips" style="margin-top:8px">
+        <span class="chip b"><b class="p">5</b> Round of 32</span><span class="chip b"><b class="p">7</b> Round of 16</span>
+        <span class="chip b"><b class="p">9</b> Quarter-final</span><span class="chip b"><b class="p">12</b> Semi-final</span>
+        <span class="chip g"><b class="p">15</b> Runner-up</span><span class="chip g"><b class="p">18</b> Winner</span>
+      </div>
+      <p class="rule-note">
+        <b>Stage points are highest-only</b> — you bank the value of the furthest round reached, not a running total. Reach the quarters and that's 9; go all the way and it's 18 (not added on top of the earlier rounds).<br>
+        <b>Knockouts can't draw.</b> A tie after extra time goes to a shootout: the winner takes the 3 points and advances, the loser gets nothing.<br>
+        <b>Clean sheets ignore the shootout</b> — only goals conceded across the 120 minutes count, so a 0-0 that goes to penalties gives both teams a clean sheet.<br>
+        <b>Underdog bonus:</b> +3 per win for the 12 lowest-ranked nations (South Africa, Qatar, Bosnia-Herzegovina, Haiti, Curaçao, New Zealand, Saudi Arabia, Cape Verde, Iraq, Jordan, Uzbekistan, Ghana) — an underdog win is worth 6.<br>
+        Every point traces back to a match on the <b>Feed</b> tab.<br>
+        <b>Timing:</b> stage points are credited when a team's match at that round is played, not the moment they're drawn into it. So in the short gap between a round being drawn and played, a team won't yet show the next round's points — that's deliberate, so the Feed and the totals never disagree.
+      </p>
+    </div>
+  </section>
+
+  <footer>Live from Supabase · real-time updates + 60s refresh</footer>
+</div>
+
+<script type="module">
+import { fetchAll, computePoints, leaderboard, teamRanking, groupStandings, bestThirds, upcoming, bracket, feed, movers, pot, flagUrl, matchWinner, wentToPens, STAGE_LABEL, supabase } from './db.js';
+
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtTime = k => k ? new Date(k).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : 'Date TBC';
+const dayKey  = k => k ? new Date(k).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}) : 'Date to be confirmed';
+const grpOf = (data,n)=>{const t=data.teams.find(x=>x.name===n);return t?t.grp:'';};
+const flg = n => { const u=flagUrl(n); return u?`<img class="flag" src="${u}" alt="" loading="lazy">`:''; };
+let DATA = null, openPid = null, pinned = localStorage.getItem('wc26_me') || '';
+
+document.getElementById('tabs').addEventListener('click', e=>{
+  const b=e.target.closest('.tab'); if(!b) return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t===b));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+b.dataset.pane));
+});
+document.getElementById('pinSel').addEventListener('change', e=>{
+  pinned=e.target.value; localStorage.setItem('wc26_me',pinned); if(DATA) renderLeaderboard(DATA);
+});
+
+function breakdownBits(p){
+  const b=[];
+  if(p.wins) b.push(`${p.wins} win${p.wins>1?'s':''} (+${p.wins*3})`);
+  if(p.draws) b.push(`${p.draws} draw${p.draws>1?'s':''} (+${p.draws})`);
+  if(p.cleanSheets) b.push(`${p.cleanSheets} clean sheet${p.cleanSheets>1?'s':''} (+${p.cleanSheets*2})`);
+  if(p.stagePoints) b.push(`${p.furthest} (+${p.stagePoints})`);
+  if(p.underdog) b.push(`underdog bonus (+${p.underdog})`);
+  return b.length?b.join(' · '):'No points yet';
+}
+function bdCard(t,data){
+  const p=computePoints(t.name,data.teams,data.matches);
+  return `<div class="bd ${t.is_underdog?'dog':''} ${p.champion?'champ':''}">
+    <div class="grp">${t.grp}</div>
+    <div class="bd-main"><div class="bd-name">${flg(t.name)}${esc(t.name)}${t.is_underdog?'<span class="dogtag">Dog</span>':''}</div>
+      <div class="bd-bits">${breakdownBits(p)}</div></div>
+    <div class="bd-pts">${p.total}</div></div>`;
+}
+
+function renderLeaderboard(data){
+  const board=leaderboard(data); const top=board.length?board[0].points:0;
+  const mv=movers(board,data.snapshots);
+  const sel=document.getElementById('pinSel');
+  if(sel && sel.options.length<=1){
+    [...board].sort((a,b)=>a.name.localeCompare(b.name)).forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;sel.appendChild(o);});
+    sel.value=pinned;
+  }
+  document.getElementById('lb').innerHTML = board.length ? board.map((p,i)=>{
+    const lead=p.points===top&&top>0; const open=p.id===openPid; const me=p.id===pinned;
+    const d=mv[p.id];
+    const mover = d==null?'' : d>0?`<span class="mv up">▲${d}</span>` : d<0?`<span class="mv down">▼${-d}</span>` : `<span class="mv flat">–</span>`;
+    const teams=[...p.teams].sort((a,b)=>computePoints(b.name,data.teams,data.matches).total-computePoints(a.name,data.teams,data.matches).total);
+    return `<div class="lb-row ${lead?'lead':''} ${open?'open':''} ${me?'me':''}" data-pid="${p.id}">
+        <div class="rk">${i+1}</div>
+        <div><div class="lb-name">${esc(p.name)}${mover}${me?' ★':''}</div><div class="lb-teams">${p.teamCount} teams · <span class="gf">${p.goalsFor} goals</span></div></div>
+        <div class="lb-pts">${p.points}<small>pts</small></div><div class="chev">▶</div></div>
+      <div class="detail ${open?'open':''}" data-detail="${p.id}">${teams.map(t=>bdCard(t,data)).join('')}</div>`;
+  }).join('') : `<div class="state">No players yet — add players and run the draw in Supabase.</div>`;
+
+  document.querySelectorAll('#lb .lb-row').forEach(row=>row.onclick=()=>{
+    const pid=row.dataset.pid; openPid = (openPid===pid)?null:pid;
+    row.classList.toggle('open'); document.querySelector(`[data-detail="${pid}"]`).classList.toggle('open');
+    document.querySelectorAll('#lb .lb-row').forEach(r=>{if(r!==row){r.classList.remove('open');}});
+    document.querySelectorAll('#lb .detail').forEach(d=>{if(d.dataset.detail!==pid)d.classList.remove('open');});
+  });
+}
+
+function renderTeams(data){
+  const rank=teamRanking(data);
+  document.getElementById('teams').innerHTML = rank.map((t,i)=>`
+    <div class="tr ${t.is_underdog?'dog':''} ${t.champion?'champ':''}">
+      <div class="trk">${i+1}</div><div class="grp">${t.grp}</div>
+      <div style="min-width:0"><div class="tr-name">${flg(t.name)}${esc(t.name)}${t.is_underdog?'<span class="dogtag" style="font-size:8.5px;color:var(--dog);border:1px solid #3a2118;border-radius:5px;padding:1px 4px;margin-left:5px">DOG</span>':''}</div>
+        <div class="tr-sub">FIFA #${t.fifa_rank} · ${breakdownBits(t)} · <span class="tr-own ${t.owner?'':'none'}">${t.owner?esc(t.owner):'unassigned'}</span></div></div>
+      <div class="tr-pts">${t.total}</div></div>`).join('');
+}
+
+function renderNext(data){
+  const ms=upcoming(data);
+  if(!ms.length){document.getElementById('next').innerHTML=`<div class="state">No upcoming fixtures. Add knockout matches in Supabase as they're drawn.</div>`;return;}
+  let html='',day='';
+  for(const m of ms){
+    const dk=dayKey(m.kickoff); if(dk!==day){day=dk;html+=`<div class="day">${esc(day)}</div>`;}
+    const hN=m.home_team||m.slot_home||'TBD', aN=m.away_team||m.slot_away||'TBD';
+    html+=`<div class="fix">
+      <div class="fx-team"><div style="min-width:0"><div class="fx-name">${flg(m.home_team)}${esc(hN)}</div>${m.home_team?`<div class="owner ${m.home_owner?'':'none'}">${m.home_owner?esc(m.home_owner):'—'}</div>`:''}</div></div>
+      <div class="fx-mid"><div class="fx-time">${m.kickoff?fmtTime(m.kickoff):'TBC'}</div>
+        <div class="fx-stage">${STAGE_LABEL[m.stage]}${m.stage==='group'?' '+grpOf(data,m.home_team):''}</div>
+        ${m.venue?`<div class="fx-time" style="margin-top:3px;opacity:.8">${esc(m.venue)}</div>`:''}</div>
+      <div class="fx-team away"><div style="min-width:0"><div class="fx-name">${flg(m.away_team)}${esc(aN)}</div>${m.away_team?`<div class="owner ${m.away_owner?'':'none'}">${m.away_owner?esc(m.away_owner):'—'}</div>`:''}</div></div></div>`;
+  }
+  document.getElementById('next').innerHTML=html;
+}
+
+function renderGroups(data){
+  const g=groupStandings(data.teams,data.matches);
+  document.getElementById('groups').innerHTML=Object.keys(g).sort().map(k=>{
+    const rows=g[k].map((r,i)=>`<tr class="${i<2?'q':''}"><td class="pos">${i+1}</td><td class="l name">${flg(r.team)}${esc(r.team)}</td>
+      <td>${r.P}</td><td>${r.W}</td><td>${r.D}</td><td>${r.L}</td><td>${r.GF}:${r.GA}</td><td>${r.GD>0?'+':''}${r.GD}</td><td class="pts">${r.Pts}</td></tr>`).join('');
+    return `<div class="gtab"><h4>Group ${k}</h4><table>
+      <tr><th>#</th><th class="l">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF:GA</th><th>GD</th><th>Pts</th></tr>${rows}</table></div>`;
+  }).join('');
+}
+
+function renderThirds(data){
+  const bt=bestThirds(data.teams,data.matches);
+  document.getElementById('thirds').innerHTML=`<div class="gtab" style="max-width:560px"><table>
+    <tr><th>#</th><th class="l">Team</th><th>Grp</th><th>P</th><th>Pts</th><th>GD</th><th>GF</th></tr>
+    ${bt.map((r,i)=>`<tr class="${r.qualified?'q':''}"><td class="pos">${i+1}</td><td class="l name">${flg(r.team)}${esc(r.team)}</td>
+      <td>${r.grp}</td><td>${r.P}</td><td class="pts">${r.Pts}</td><td>${r.GD>0?'+':''}${r.GD}</td><td>${r.GF}</td></tr>`).join('')}
+  </table></div>`;
+}
+
+function renderBracket(data){
+  const b=bracket(data.matches);
+  const rounds=[['r32','Round of 32'],['r16','Round of 16'],['qf','Quarter-finals'],['sf','Semi-finals'],['final','Final']];
+  const card=m=>{const w=matchWinner(m);
+    const side=(team,sc)=>`<div class="side ${w?(w===team?'win':'lose'):''}"><span class="t">${flg(team)}${esc(team)}</span><span class="s">${sc==null?'–':sc}</span></div>`;
+    return `<div class="ko ${m.stage==='final'?'final-card':''}">${side(m.home_team||m.slot_home||'TBD',m.home_score)}${side(m.away_team||m.slot_away||'TBD',m.away_score)}${wentToPens(m)?`<div class="pl">${esc(w)} win on penalties</div>`:''}</div>`;};
+  document.getElementById('ko').innerHTML=rounds.map(([k,label])=>
+    `<div class="round"><h4>${label}</h4>${b[k].length?b[k].map(card).join(''):`<div class="ko empty">To be drawn</div>`}</div>`).join('');
+}
+
+function renderFeed(data){
+  const items=feed(data);
+  if(!items.length){document.getElementById('feed').innerHTML=`<div class="state">No results yet. Enter scores in Supabase and they'll appear here.</div>`;return;}
+  document.getElementById('feed').innerHTML=items.map(m=>{
+    const hw=m.winner===m.home_team, aw=m.winner===m.away_team;
+    const awards=m.awards.map(a=>`<div class="faward"><div><div class="who">${esc(a.team)}${a.owner?`<span class="o">${esc(a.owner)}</span>`:''}</div>
+        <div class="items">${a.items.length?a.items.map(i=>`${esc(i.label)} +${i.pts}`).join(' · '):'no points'}</div></div>
+      <div class="ap ${a.total?'':'zero'}">${a.total>0?'+':''}${a.total}</div></div>`).join('');
+    return `<div class="fitem"><div class="fhead">
+        <div class="fscore"><span class="${hw?'w':''}">${flg(m.home_team)}${esc(m.home_team)}</span> <span class="vs">${m.home_score}–${m.away_score}</span> <span class="${aw?'w':''}">${flg(m.away_team)}${esc(m.away_team)}</span></div>
+        <div style="display:flex;gap:8px;align-items:center">${m.pens?`<span class="fpens">pens: ${esc(m.winner)}</span>`:''}<span class="fstage">${STAGE_LABEL[m.stage]}${m.stage==='group'?' '+grpOf(data,m.home_team):''}</span></div>
+      </div>${awards}</div>`;
+  }).join('');
+}
+
+function renderPot(data){
+  const board=leaderboard(data); const P=pot(data,board);
+  const money=v=>`${P.currency}${(Math.round(v*100)/100).toLocaleString('en-GB')}`;
+  const row=(lbl,o)=>`<div class="payout"><div><div class="lbl">${lbl}</div><div class="who">${esc(o.name)}</div></div><div class="pc">${o.pct}%</div><div class="amt">${money(o.amount)}</div></div>`;
+  document.getElementById('pot').innerHTML=`
+    <div class="pot-top"><div><div class="pot-total">${money(P.total)}</div>
+      <div class="pot-sub">${P.buyIn?`${money(P.buyIn)} buy-in · ${P.paidCount}/${P.totalPlayers} paid in`:'Buy-in not set yet — set it in the settings table in Supabase.'}</div></div></div>
+    ${row('🏆 Winner',P.payouts.winner)}${row('🥈 Runner-up',P.payouts.runnerUp)}${row('🥄 Wooden spoon',P.payouts.spoon)}
+    <div class="paidlist">${data.players.map(p=>`<span class="paidtag ${p.paid?'yes':'no'}">${p.paid?'✓':'○'} ${esc(p.name)}</span>`).join('')}</div>
+    <p class="qnote">Buy-in, currency and the % split live in the <b>settings</b> table; tick the <b>paid</b> box on each player. Payout names track the live standings (wooden spoon = last place).</p>`;
+}
+
+async function render(){
+  try{
+    DATA=await fetchAll();
+    renderLeaderboard(DATA);renderTeams(DATA);renderNext(DATA);renderGroups(DATA);renderThirds(DATA);renderBracket(DATA);renderFeed(DATA);renderPot(DATA);
+  }catch(e){
+    document.getElementById('lb').innerHTML=`<div class="state err">Couldn't load data. Check the URL/anon key in db.js.<br>${esc(e.message||e)}</div>`;
+  }
+}
+render();
+
+// live updates (needs realtime enabled on these tables — see migration_v2.sql); 60s poll as a fallback
+try{
+  supabase.channel('live')
+    .on('postgres_changes',{event:'*',schema:'public',table:'matches'},render)
+    .on('postgres_changes',{event:'*',schema:'public',table:'assignments'},render)
+    .on('postgres_changes',{event:'*',schema:'public',table:'players'},render)
+    .subscribe();
+}catch(e){ /* realtime not enabled — poll still covers it */ }
+setInterval(render,60000);
+</script>
+</body>
+</html>
