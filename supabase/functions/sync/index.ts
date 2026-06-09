@@ -140,10 +140,17 @@ Deno.serve(async () => {
       supabase.from('assignments').select('*'), supabase.from('matches').select('*'),
     ]);
     const ownerOf: Record<string, string> = Object.fromEntries(assigns.map((a: any) => [a.team_name, a.player_id]));
-    const board = players.map((p: any) => ({
-      id: p.id,
-      points: teams.filter((t: any) => ownerOf[t.name] === p.id).reduce((s: number, t: any) => s + teamPoints(t.name, teams, ms), 0),
-    })).sort((a, b) => b.points - a.points);
+    const goalsOf = (name: string) => ms
+      .filter((m: any) => m.played && m.home_score != null && (m.home_team === name || m.away_team === name))
+      .reduce((s: number, m: any) => s + (m.home_team === name ? m.home_score : m.away_score), 0);
+    const board = players.map((p: any) => {
+      const mine = teams.filter((t: any) => ownerOf[t.name] === p.id);
+      return {
+        id: p.id, name: p.name,
+        points: mine.reduce((s: number, t: any) => s + teamPoints(t.name, teams, ms), 0),
+        goalsFor: mine.reduce((s: number, t: any) => s + goalsOf(t.name), 0),
+      };
+    }).sort((a, b) => b.points - a.points || b.goalsFor - a.goalsFor || a.name.localeCompare(b.name)); // same order as the page
     if (board.length) {
       await supabase.from('standings_snapshots').insert(board.map((p, i) => ({ captured_on: today, player_id: p.id, rank: i + 1, points: p.points })));
       log.push(`snapshot written for ${today} (${board.length} players)`);
