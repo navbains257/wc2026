@@ -26,12 +26,17 @@ export async function fetchAll() {
     supabase.from('matches').select('*'),
   ]);
   for (const r of [teams, players, assignments, matches]) if (r.error) throw r.error;
-  // optional tables (exist after migration_v2) — tolerate their absence
-  let settings = null, snapshots = [];
+  // optional tables (exist after later migrations) — tolerate their absence
+  let settings = null, snapshots = [], awards = [];
   try { const s = await supabase.from('settings').select('*').limit(1).maybeSingle(); if (!s.error) settings = s.data; } catch {}
   try { const s = await supabase.from('standings_snapshots').select('*').order('captured_on', { ascending: false }).limit(96); if (!s.error) snapshots = s.data || []; } catch {}
+  try { const a = await supabase.from('awards').select('*'); if (!a.error) awards = a.data || []; } catch {}
+  // attach award bonuses to the teams that won them (flows to the owner via scoring)
+  const awardsByTeam = {};
+  for (const aw of awards) if (aw.team_name) (awardsByTeam[aw.team_name] ||= []).push({ label: aw.label, points: aw.points });
+  for (const t of teams.data) { t.awards = awardsByTeam[t.name] || []; t.awardPoints = t.awards.reduce((s, x) => s + x.points, 0); }
   return { teams: teams.data, players: players.data,
-           assignments: assignments.data, matches: matches.data, settings, snapshots };
+           assignments: assignments.data, matches: matches.data, settings, snapshots, awards };
 }
 
 // Who advanced. Level score in a knockout → decided by the shootout (pen_winner).
@@ -81,9 +86,11 @@ export function computePoints(teamName, teams, matches) {
   const inFinal = stages.has('final');
 
   const underdog = team.is_underdog ? wins * 3 : 0;
-  const total = wins * 3 + draws + cleanSheets * 2 + stagePoints + underdog;
+  const awardPoints = team.awardPoints || 0;                 // end-of-tournament bonuses (golden boot, etc.)
+  const awardLabels = team.awards || [];
+  const total = wins * 3 + draws + cleanSheets * 2 + stagePoints + underdog + awardPoints;
 
-  return { total, wins, draws, cleanSheets, goalsFor, stagePoints, furthest, underdog, champion, runnerUp: inFinal && !champion };
+  return { total, wins, draws, cleanSheets, goalsFor, stagePoints, furthest, underdog, awardPoints, awardLabels, champion, runnerUp: inFinal && !champion };
 }
 
 // ---- sweepstake league table (by person), tiebreak on total goals scored ----
