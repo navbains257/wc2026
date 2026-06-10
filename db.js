@@ -207,19 +207,48 @@ export function movers(currentBoard, snapshots) {
   return out;
 }
 
-// ---- prize pot ----
+// ---- prize pot with side pots ----
+// Players can buy in for less; each "contribution layer" is won only by players who paid into it,
+// ranked among themselves, so a short stake is capped to the layers it funded and the remainder
+// cascades to the next eligible player. Conserves money: sum of net positions = 0.
 export function pot({ settings, players }, board) {
-  const buyIn = settings?.buy_in ?? 0;
   const currency = settings?.currency ?? '£';
-  const paidCount = players.filter(p => p.paid).length;
-  const total = paidCount * buyIn;
+  const standard = settings?.buy_in ?? 0;
   const pct = { winner: settings?.split_winner ?? 70, runnerUp: settings?.split_runner_up ?? 20, spoon: settings?.split_spoon ?? 10 };
-  const payouts = {
-    winner:   { name: board[0]?.name || '—',                amount: total * pct.winner / 100,   pct: pct.winner },
-    runnerUp: { name: board[1]?.name || '—',                amount: total * pct.runnerUp / 100, pct: pct.runnerUp },
-    spoon:    { name: board[board.length - 1]?.name || '—', amount: total * pct.spoon / 100,    pct: pct.spoon },
-  };
-  return { buyIn, currency, paidCount, totalPlayers: players.length, total, payouts };
+
+  // contribution per player (their own buy_in overrides the standard; unpaid = 0)
+  const contribOf = {};
+  let total = 0;
+  for (const p of players) { const c = p.paid ? (p.buy_in ?? standard) : 0; contribOf[p.id] = c; total += c; }
+
+  // paid players in current standing order (board is best→worst)
+  const ranked = board.filter(p => contribOf[p.id] > 0);
+
+  const winnings = {};
+  for (const p of players) winnings[p.id] = 0;
+
+  // build contribution layers (poker side pots) and split each among its eligible players
+  const levels = [...new Set(ranked.map(p => contribOf[p.id]))].sort((a, b) => a - b);
+  let prev = 0;
+  for (const lvl of levels) {
+    const eligible = ranked.filter(p => contribOf[p.id] >= lvl);   // already standing-ordered
+    const layerTotal = (lvl - prev) * eligible.length;
+    prev = lvl;
+    if (!eligible.length || layerTotal <= 0) continue;
+    const slots = [[eligible[0], pct.winner], [eligible[1], pct.runnerUp], [eligible[eligible.length - 1], pct.spoon]]
+      .filter(([pl]) => pl);                       // drop positions that don't exist in a tiny field
+    const denom = slots.reduce((s, [, sh]) => s + sh, 0) || 1;   // renormalise so the whole layer is paid out
+    for (const [pl, sh] of slots) winnings[pl.id] += layerTotal * sh / denom;
+  }
+
+  const paidById = Object.fromEntries(players.map(p => [p.id, p]));
+  const rows = board.map(p => {
+    const contribution = contribOf[p.id];
+    const win = winnings[p.id] || 0;
+    return { id: p.id, name: p.name, paid: !!paidById[p.id]?.paid, contribution, winnings: win, net: win - contribution };
+  });
+  const shorts = players.filter(p => p.paid && p.buy_in != null && p.buy_in < standard).map(p => ({ name: p.name, buyIn: p.buy_in }));
+  return { currency, standard, total, paidCount: ranked.length, totalPlayers: players.length, rows, shorts };
 }
 
 // ---- flags (flagcdn, cross-platform incl. Windows; home-nations get gb-eng/gb-sct) ----
