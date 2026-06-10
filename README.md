@@ -113,6 +113,7 @@ Repo **Settings → Pages → Source: main / root**. Live at
 - **Stage points, highest-only** (you bank the furthest round, not a running total): R32 **5**, R16 **7**, QF **9**, SF **12**, runner-up **15**, winner **18**.
 - **Knockouts can't draw.** A tie after extra time goes to a shootout — winner gets the 3 points and advances, loser gets 0. Enter the level score and set `pen_winner`.
 - **Clean sheets ignore the shootout**: only goals conceded over the 120 minutes count, so a 0-0 decided on pens is a clean sheet for both.
+- **End-of-tournament awards** (run `migration_v4.sql`): the owner of the nation that takes the **Golden Boot / Golden Glove / Best Player / Fewest goals** gets **+4** each, and **most cards in the group stage** is **+3**. Assign them at the end by setting the winning nation, e.g. `update awards set team_name = 'Brazil' where award = 'golden_boot';` — the bonus then flows to that team's owner automatically. To find the fewest-scoring team: `select t.name, coalesce(sum(case when m.home_team=t.name then m.home_score when m.away_team=t.name then m.away_score end),0) gf from teams t left join matches m on (m.home_team=t.name or m.away_team=t.name) and m.played group by t.name order by gf asc;`
 
 Internally, stage points are stored as increments (R32 +5, then +2 R16, +2 QF, +3 SF, +3 final, +3 win) so they sum to the highest-only totals **and** every point traces back to a single match in the Feed. Change `STAGE_REACH` / `computePoints` in `db.js` to adjust anything.
 
