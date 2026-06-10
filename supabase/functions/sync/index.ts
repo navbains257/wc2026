@@ -135,11 +135,14 @@ Deno.serve(async () => {
   const today = new Date().toISOString().slice(0, 10);
   const { data: todaySnap } = await supabase.from('standings_snapshots').select('captured_on').eq('captured_on', today).limit(1);
   if (!todaySnap?.length) {
-    const [{ data: teams = [] }, { data: players = [] }, { data: assigns = [] }, { data: ms = [] }] = await Promise.all([
+    const [{ data: teams = [] }, { data: players = [] }, { data: assigns = [] }, { data: ms = [] }, awardsRes] = await Promise.all([
       supabase.from('teams').select('*'), supabase.from('players').select('*'),
       supabase.from('assignments').select('*'), supabase.from('matches').select('*'),
+      supabase.from('awards').select('*'),
     ]);
     const ownerOf: Record<string, string> = Object.fromEntries(assigns.map((a: any) => [a.team_name, a.player_id]));
+    const awardByTeam: Record<string, number> = {};
+    for (const aw of (awardsRes?.data ?? [])) if (aw.team_name) awardByTeam[aw.team_name] = (awardByTeam[aw.team_name] || 0) + aw.points;
     const goalsOf = (name: string) => ms
       .filter((m: any) => m.played && m.home_score != null && (m.home_team === name || m.away_team === name))
       .reduce((s: number, m: any) => s + (m.home_team === name ? m.home_score : m.away_score), 0);
@@ -147,7 +150,7 @@ Deno.serve(async () => {
       const mine = teams.filter((t: any) => ownerOf[t.name] === p.id);
       return {
         id: p.id, name: p.name,
-        points: mine.reduce((s: number, t: any) => s + teamPoints(t.name, teams, ms), 0),
+        points: mine.reduce((s: number, t: any) => s + teamPoints(t.name, teams, ms) + (awardByTeam[t.name] || 0), 0),
         goalsFor: mine.reduce((s: number, t: any) => s + goalsOf(t.name), 0),
       };
     }).sort((a, b) => b.points - a.points || b.goalsFor - a.goalsFor || a.name.localeCompare(b.name)); // same order as the page
