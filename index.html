@@ -125,6 +125,15 @@
   .paidlist{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
   .paidtag{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:6px 12px}
   .paidtag.yes{border-color:#2c4a1e;color:var(--pitch)}.paidtag.no{color:var(--muted)}
+  .ptbl{margin-top:4px}
+  .pth,.ptr{display:grid;grid-template-columns:1fr auto auto auto;gap:14px;align-items:center;padding:10px 14px}
+  .pth{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .pth span:not(:first-child),.ptr span:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+  .ptr{background:#0b0f0e;border:1px solid var(--line);border-radius:11px;margin-bottom:7px}
+  .ptr.me{box-shadow:0 0 0 2px var(--pitch) inset}
+  .pn{font-weight:700;font-size:14.5px}
+  .net{font-family:'Anton';font-size:18px}.net.pos{color:var(--pitch)}.net.neg{color:var(--dog)}.net.zero{color:var(--muted)}
+  .captag{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);border:1px solid #4a3a1a;border-radius:5px;padding:1px 5px;margin-left:6px}
   .state{color:var(--muted);text-align:center;padding:34px;font-size:14px}.err{color:var(--dog)}
   footer{margin-top:32px;text-align:center;color:var(--muted);font-size:12px}
 </style>
@@ -190,9 +199,7 @@
         <b>Clean sheets ignore the shootout</b> — only goals conceded across the 120 minutes count, so a 0-0 that goes to penalties gives both teams a clean sheet.<br>
         <b>Underdog bonus:</b> +3 per win for the 12 lowest-ranked nations (South Africa, Qatar, Bosnia-Herzegovina, Haiti, Curaçao, New Zealand, Saudi Arabia, Cape Verde, Iraq, Jordan, Uzbekistan, Ghana) — an underdog win is worth 6.<br>
         Every point traces back to a match on the <b>Feed</b> tab.<br>
-        <b>Timing:</b> stage points are credited when a team's match at that round is played, not the moment they're drawn into it. So in the short gap between a round being drawn and played, a team won't yet show the next round's points — that's deliberate, so the Feed and the totals never disagree.<b><br>
-        <b>The third place playoff doesn't count for shit - idc if you moan</b><br>
-        <b>In case of draws on points between us, the tiebreaker is GF, after that it is GD, after that we run one board on pokerrr2</b>
+        <b>Timing:</b> stage points are credited when a team's match at that round is played, not the moment they're drawn into it. So in the short gap between a round being drawn and played, a team won't yet show the next round's points — that's deliberate, so the Feed and the totals never disagree.
       </p>
     </div>
   </section>
@@ -338,14 +345,30 @@ function renderFeed(data){
 
 function renderPot(data){
   const board=leaderboard(data); const P=pot(data,board);
-  const money=v=>`${P.currency}${(Math.round(v*100)/100).toLocaleString('en-GB')}`;
-  const row=(lbl,o)=>`<div class="payout"><div><div class="lbl">${lbl}</div><div class="who">${esc(o.name)}</div></div><div class="pc">${o.pct}%</div><div class="amt">${money(o.amount)}</div></div>`;
+  const s=data.settings||{};
+  const fmt=v=>`${P.currency}${(Math.round(Math.abs(v)*100)/100).toLocaleString('en-GB',{maximumFractionDigits:2})}`;
+  const netCell=v=>`<span class="net ${v>1e-9?'pos':v<-1e-9?'neg':'zero'}">${v>1e-9?'+':v<-1e-9?'−':''}${fmt(v)}</span>`;
+  const splitNote=`winner ${s.split_winner??70}% · runner-up ${s.split_runner_up??20}% · spoon ${s.split_spoon??10}%`;
+
+  if(!P.total){
+    document.getElementById('pot').innerHTML=`<div class="state">No pot yet — set the standard buy-in in the <b>settings</b> table and tick <b>paid</b> on each player in Supabase. One player can have a smaller <b>buy_in</b> for a side pot.</div>`;
+    return;
+  }
+  const shortNote=P.shorts.length
+    ? `${P.shorts.map(x=>esc(x.name)+' staked '+fmt(x.buyIn)).join(', ')} — capped to the main pot; the rest is contested by the full-stake players. `
+    : '';
   document.getElementById('pot').innerHTML=`
-    <div class="pot-top"><div><div class="pot-total">${money(P.total)}</div>
-      <div class="pot-sub">${P.buyIn?`${money(P.buyIn)} buy-in · ${P.paidCount}/${P.totalPlayers} paid in`:'Buy-in not set yet — set it in the settings table in Supabase.'}</div></div></div>
-    ${row('🏆 Winner',P.payouts.winner)}${row('🥈 Runner-up',P.payouts.runnerUp)}${row('🥄 Wooden spoon',P.payouts.spoon)}
-    <div class="paidlist">${data.players.map(p=>`<span class="paidtag ${p.paid?'yes':'no'}">${p.paid?'✓':'○'} ${esc(p.name)}</span>`).join('')}</div>
-    <p class="qnote">Buy-in, currency and the % split live in the <b>settings</b> table; tick the <b>paid</b> box on each player. Payout names track the live standings (wooden spoon = last place).</p>`;
+    <div class="pot-top"><div><div class="pot-total">${fmt(P.total)}</div>
+      <div class="pot-sub">${P.paidCount}/${P.totalPlayers} paid · standard stake ${fmt(P.standard)} · ${splitNote}</div></div></div>
+    <div class="ptbl">
+      <div class="pth"><span>Player</span><span>Stake</span><span>Payout</span><span>Net</span></div>
+      ${P.rows.map(r=>`<div class="ptr ${r.id===pinned?'me':''}">
+        <span class="pn">${esc(r.name)}${(r.contribution>0&&r.contribution<P.standard)?'<span class="captag">capped</span>':''}${!r.paid?'<span class="captag" style="color:var(--muted);border-color:var(--line)">not in</span>':''}${r.id===pinned?' ★':''}</span>
+        <span>${r.contribution?fmt(r.contribution):'—'}</span>
+        <span>${fmt(r.winnings)}</span>
+        <span>${netCell(r.net)}</span></div>`).join('')}
+    </div>
+    <p class="qnote">${shortNote}Live projection at the current standings (positive = in profit, negative = down). Set the standard stake/split in <b>settings</b>, each player's <b>paid</b> flag, and a smaller <b>buy_in</b> for anyone staking less.</p>`;
 }
 
 async function render(){
