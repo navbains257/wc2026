@@ -193,15 +193,21 @@
         <span class="chip b"><b class="p">9</b> Quarter-final</span><span class="chip b"><b class="p">12</b> Semi-final</span>
         <span class="chip g"><b class="p">15</b> Runner-up</span><span class="chip g"><b class="p">18</b> Winner</span>
       </div>
+      <div class="chips" style="margin-top:8px">
+        <span class="chip g"><b class="p">+4</b> Golden Boot</span><span class="chip g"><b class="p">+4</b> Golden Glove</span>
+        <span class="chip g"><b class="p">+4</b> Best Player</span><span class="chip g"><b class="p">+4</b> Fewest goals</span>
+        <span class="chip d"><b class="p">+3</b> Most cards (groups)</span>
+      </div>
       <p class="rule-note">
         <b>Stage points are highest-only</b> — you bank the value of the furthest round reached, not a running total. Reach the quarters and that's 9; go all the way and it's 18 (not added on top of the earlier rounds).<br>
         <b>Knockouts can't draw.</b> A tie after extra time goes to a shootout: the winner takes the 3 points and advances, the loser gets nothing.<br>
         <b>Clean sheets ignore the shootout</b> — only goals conceded across the 120 minutes count, so a 0-0 that goes to penalties gives both teams a clean sheet.<br>
         <b>Underdog bonus:</b> +3 per win for the 12 lowest-ranked nations (South Africa, Qatar, Bosnia-Herzegovina, Haiti, Curaçao, New Zealand, Saudi Arabia, Cape Verde, Iraq, Jordan, Uzbekistan, Ghana) — an underdog win is worth 6.<br>
+        <b>End-of-tournament awards:</b> the owner of the nation that wins the Golden Boot, Golden Glove, Best Player or scores the fewest goals gets +4 each; most cards in the group stage is +3. Added once the tournament finishes.<br>
         Every point traces back to a match on the <b>Feed</b> tab.<br>
-        <b>Timing:</b> stage points are credited when a team's match at that round is played, not the moment they're drawn into it. So in the short gap between a round being drawn and played, a team won't yet show the next round's points — that's deliberate, so the Feed and the totals never disagree.<b><br>
-        <b>The third place playoff doesn't count for shit - idc if you moan</b><br>
-        <b>In case of draws on points between us, the tiebreaker is GF, after that it is GD, after that we run one board on pokerrr2</b>
+        <b>Timing:</b> stage points are credited when a team's match at that round is played, not the moment they're drawn into it. So in the short gap between a round being drawn and played, a team won't yet show the next round's points — that's deliberate, so the Feed and the totals never disagree.<br>
+        <b>The third place playoff doesn't count for shit — idc if you moan.</b><br>
+        <b>In case of draws on points between us, the tiebreaker is GF, after that it is GD, after that we run one board on pokerrr2.</b>
       </p>
     </div>
   </section>
@@ -235,6 +241,7 @@ function breakdownBits(p){
   if(p.cleanSheets) b.push(`${p.cleanSheets} clean sheet${p.cleanSheets>1?'s':''} (+${p.cleanSheets*2})`);
   if(p.stagePoints) b.push(`${p.furthest} (+${p.stagePoints})`);
   if(p.underdog) b.push(`underdog bonus (+${p.underdog})`);
+  if(p.awardPoints) b.push(`${p.awardLabels.map(a=>a.label).join(', ')} (+${p.awardPoints})`);
   return b.length?b.join(' · '):'No points yet';
 }
 function bdCard(t,data){
@@ -389,6 +396,7 @@ try{
     .on('postgres_changes',{event:'*',schema:'public',table:'matches'},render)
     .on('postgres_changes',{event:'*',schema:'public',table:'assignments'},render)
     .on('postgres_changes',{event:'*',schema:'public',table:'players'},render)
+    .on('postgres_changes',{event:'*',schema:'public',table:'awards'},render)
     .subscribe();
 }catch(e){ /* realtime not enabled — poll still covers it */ }
 setInterval(render,60000);
