@@ -5,9 +5,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // ↓↓↓ Supabase → Project Settings → API.  The anon/public key is SAFE in client code.
 export const SUPABASE_URL  = 'https://tbbbojhhookjjwpqjxpv.supabase.co';
-export const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRiYmJvamhob29ramp3cHFqeHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjgzMzksImV4cCI6MjA5NjYwNDMzOX0.zu4tgscylrlsEixvSd4pVA-ecirfSEU3kvY1M9KOWnk';
+export const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRiYmJvamhob29ramp3cHFqeHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjgzMzksImV4cCI6MjA5NjYwNDMzOX0.zu4tgscylrlsEixvSd4pVA-
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+  export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 export const STAGE_LABEL = { group:'Group', r32:'Round of 32', r16:'Round of 16',
                              qf:'Quarter-final', sf:'Semi-final', final:'Final' };
@@ -256,6 +256,24 @@ export function pot({ settings, players }, board) {
   });
   const shorts = players.filter(p => p.paid && p.buy_in != null && p.buy_in < standard).map(p => ({ name: p.name, buyIn: p.buy_in }));
   return { currency, standard, total, paidCount: ranked.length, totalPlayers: players.length, rows, shorts };
+}
+
+// ---- one-off side bet: nav v akshay, £100 each, FEWER points wins ----
+export function sideBet(board) {
+  const find = n => board.find(p => (p.name || '').toLowerCase() === n);
+  const a = find('nav'), b = find('akshay');
+  if (!a || !b) return null;
+  const stake = 100;
+  let winner = null;                                   // fewer points takes it
+  if (a.points < b.points) winner = a.id;
+  else if (b.points < a.points) winner = b.id;
+  const net = id => winner == null ? 0 : (id === winner ? stake : -stake);
+  return {
+    stake, currency: '£',
+    rows: [a, b].map(p => ({ id: p.id, name: p.name, points: p.points, net: net(p.id) })),
+    tied: winner == null,
+    winnerName: winner == null ? null : (winner === a.id ? a.name : b.name),
+  };
 }
 
 // ---- flags (flagcdn, cross-platform incl. Windows; home-nations get gb-eng/gb-sct) ----
