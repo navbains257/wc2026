@@ -126,7 +126,7 @@
   .paidtag{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:6px 12px}
   .paidtag.yes{border-color:#2c4a1e;color:var(--pitch)}.paidtag.no{color:var(--muted)}
   .ptbl{margin-top:4px}
-  .pth,.ptr{display:grid;grid-template-columns:1fr auto auto auto;gap:14px;align-items:center;padding:10px 14px}
+  .pth,.ptr{display:grid;grid-template-columns:1fr 64px 72px 92px;gap:12px;align-items:center;padding:10px 14px}
   .pth{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
   .pth span:not(:first-child),.ptr span:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
   .ptr{background:#0b0f0e;border:1px solid var(--line);border-radius:11px;margin-bottom:7px}
@@ -364,7 +364,7 @@ function renderPot(data){
   const s=data.settings||{};
   const fmt=v=>`${P.currency}${(Math.round(Math.abs(v)*100)/100).toLocaleString('en-GB',{maximumFractionDigits:2})}`;
   const netCell=v=>`<span class="net ${v>1e-9?'pos':v<-1e-9?'neg':'zero'}">${v>1e-9?'+':v<-1e-9?'−':''}${fmt(v)}</span>`;
-  const splitNote=`winner ${s.split_winner??70}% · runner-up ${s.split_runner_up??20}% · spoon ${s.split_spoon??10}%`;
+  const splitNote=`winner 70% · runner-up 20% · spoon 10%`;
 
   if(!P.total){
     document.getElementById('pot').innerHTML=`<div class="state">No pot yet — set the standard buy-in in the <b>settings</b> table and tick <b>paid</b> on each player in Supabase. One player can have a smaller <b>buy_in</b> for a side pot.</div>`;
@@ -374,28 +374,24 @@ function renderPot(data){
     ? `${P.shorts.map(x=>esc(x.name)+' staked '+fmt(x.buyIn)).join(', ')} — capped to the main pot; the rest is contested by the full-stake players. `
     : '';
   const sb=sideBet(board);
-  const sbHtml=sb?`
-    <div class="sidebet">
-      <div class="sb-h">Side bet · ${esc(sb.rows[0].name)} v ${esc(sb.rows[1].name)} · £${sb.stake} each · <b>fewer points wins</b></div>
-      ${sb.rows.map(r=>`<div class="sb-row ${(!sb.tied&&r.net>0)?'lead':''}">
-        <span class="pn">${esc(r.name)}${r.id===pinned?' ★':''}</span>
-        <span>${r.points} pts</span>
-        <span class="net ${r.net>0?'pos':r.net<0?'neg':'zero'}">${r.net>0?'+£':r.net<0?'−£':'£'}${Math.abs(r.net)}</span></div>`).join('')}
-      <div class="sb-note">${sb.tied?'Level — nobody ahead yet':`${esc(sb.winnerName)} is winning it (fewer points)`}</div>
-    </div>`:'';
+  const sStake=id=> sb&&sb.ids.includes(id) ? sb.stake : 0;
+  const sWin=id=>{ if(!sb||!sb.ids.includes(id)) return 0; if(sb.tied) return sb.stake; return id===sb.winnerId?sb.stake*2:0; };
+  const sbNote=sb?` <b>${esc(sb.aName)}</b> and <b>${esc(sb.bName)}</b> each have a £${sb.stake} side bet folded into their totals — whoever's lower in the table wins it (${sb.tied?'currently level':`${esc(sb.winnerName)} ahead`}).`:'';
   document.getElementById('pot').innerHTML=`
     <div class="pot-top"><div><div class="pot-total">${fmt(P.total)}</div>
       <div class="pot-sub">${P.paidCount}/${P.totalPlayers} paid · standard stake ${fmt(P.standard)} · ${splitNote}</div></div></div>
     <div class="ptbl">
       <div class="pth"><span>Player</span><span>Stake</span><span>Payout</span><span>Net</span></div>
-      ${P.rows.map(r=>`<div class="ptr ${r.id===pinned?'me':''}">
-        <span class="pn">${esc(r.name)}${(r.contribution>0&&r.contribution<P.standard)?'<span class="captag">capped</span>':''}${!r.paid?'<span class="captag" style="color:var(--muted);border-color:var(--line)">not in</span>':''}${r.id===pinned?' ★':''}</span>
-        <span>${r.contribution?fmt(r.contribution):'—'}</span>
-        <span>${fmt(r.winnings)}</span>
-        <span>${netCell(r.net)}</span></div>`).join('')}
+      ${P.rows.map(r=>{
+        const stake=r.contribution+sStake(r.id), payout=r.winnings+sWin(r.id), net=payout-stake, isSB=sb&&sb.ids.includes(r.id);
+        return `<div class="ptr ${r.id===pinned?'me':''}">
+        <span class="pn">${esc(r.name)}${(r.contribution>0&&r.contribution<P.standard)?'<span class="captag">capped</span>':''}${!r.paid?'<span class="captag" style="color:var(--muted);border-color:var(--line)">not in</span>':''}${isSB?'<span class="captag">side bet</span>':''}${r.id===pinned?' ★':''}</span>
+        <span>${stake?fmt(stake):'—'}</span>
+        <span>${fmt(payout)}</span>
+        <span>${netCell(net)}</span></div>`;
+      }).join('')}
     </div>
-    ${sbHtml}
-    <p class="qnote">${shortNote}Live projection at the current standings (positive = in profit, negative = down). Set the standard stake/split in <b>settings</b>, each player's <b>paid</b> flag, and a smaller <b>buy_in</b> for anyone staking less.</p>`;
+    <p class="qnote">${shortNote}Live projection at the current standings (positive = in profit, negative = down).${sbNote}</p>`;
 }
 
 async function render(){
