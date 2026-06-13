@@ -7,7 +7,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 export const SUPABASE_URL  = 'https://tbbbojhhookjjwpqjxpv.supabase.co';
 export const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRiYmJvamhob29ramp3cHFqeHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjgzMzksImV4cCI6MjA5NjYwNDMzOX0.zu4tgscylrlsEixvSd4pVA-
 
-  export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 export const STAGE_LABEL = { group:'Group', r32:'Round of 32', r16:'Round of 16',
                              qf:'Quarter-final', sf:'Semi-final', final:'Final' };
