@@ -258,21 +258,21 @@ export function pot({ settings, players }, board) {
   return { currency, standard, total, paidCount: ranked.length, totalPlayers: players.length, rows, shorts };
 }
 
-// ---- one-off side bet: nav v akshay, £100 each, FEWER points wins ----
+// ---- one-off side bet: nav v akshay, £100 each, LOWER in the table wins ----
+// Decided by league position (points, then goals-for) so it tracks the standings;
+// only "level" when they're genuinely tied on both.
 export function sideBet(board) {
   const find = n => board.find(p => (p.name || '').toLowerCase() === n);
   const a = find('nav'), b = find('akshay');
   if (!a || !b) return null;
-  const stake = 100;
-  let winner = null;                                   // fewer points takes it
-  if (a.points < b.points) winner = a.id;
-  else if (b.points < a.points) winner = b.id;
-  const net = id => winner == null ? 0 : (id === winner ? stake : -stake);
+  const ga = a.goalsFor || 0, gb = b.goalsFor || 0;
+  let winnerId = null;                                  // lower in the table (fewer points, then fewer GF) wins
+  if (a.points !== b.points) winnerId = a.points < b.points ? a.id : b.id;
+  else if (ga !== gb) winnerId = ga < gb ? a.id : b.id;
   return {
-    stake, currency: '£',
-    rows: [a, b].map(p => ({ id: p.id, name: p.name, points: p.points, net: net(p.id) })),
-    tied: winner == null,
-    winnerName: winner == null ? null : (winner === a.id ? a.name : b.name),
+    stake: 100, ids: [a.id, b.id], aName: a.name, bName: b.name,
+    winnerId, tied: winnerId == null,
+    winnerName: winnerId == null ? null : (winnerId === a.id ? a.name : b.name),
   };
 }
 
